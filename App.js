@@ -11,7 +11,7 @@ import {
 } from "react-native";
 import Svg, { Circle } from "react-native-svg";
 import { Picker } from "@react-native-picker/picker";
-import axios from "axios"; 
+import axios from "axios";
 import Icon from 'react-native-vector-icons/Ionicons';
 
 
@@ -25,7 +25,7 @@ const fmt = (v) => (v === undefined || v === null ? "" : String(v));
 const toInt = (v) => {
   const n = parseInt(v, 10);
   return isNaN(n) ? 0 : n;
-}; 
+};
 
 
 
@@ -67,7 +67,7 @@ export default function App() {
   const [message, setMessage] = useState("");
 
   // add workout inputs
-  const [workoutName, setWorkoutName] = useState(""); 
+  const [workoutName, setWorkoutName] = useState("");
 
   // flakes
   const [flakeColor, setFlakeColor] = useState("white");
@@ -90,7 +90,7 @@ export default function App() {
     plankDuration: "", // seconds or mm:ss
     stretches: "", // comma-separated stretch types
     stretchDuration: "", // minutes
-  }; 
+  };
 
   // ---------- effects: flakes init/reset ----------
   useEffect(() => {
@@ -159,13 +159,13 @@ export default function App() {
       setPage(lastPage);
       setMessage("");
       return newHistory;
-    }); 
-  }; 
+    });
+  };
 
   const deleteHistory = async (workoutId, index) => {
     try {
       await axios.delete(`${API_BASE}/workouts/${workoutId}/history/${index}`);
-  
+
       // Update local state immediately
       setWorkouts(prev =>
         prev.map(w =>
@@ -178,8 +178,8 @@ export default function App() {
       console.error("Failed to delete history:", err.message);
     }
   };
-  
-  
+
+
 
   // ---------- API helpers ----------
   // fetch workouts (optional if you already bootstrap from server)
@@ -207,15 +207,15 @@ export default function App() {
   // ---------- add workout ----------
   const addWorkout = async () => {
     if (!workoutName.trim()) return;
-  
+
     const payload = { label: workoutName.trim(), ...defaultTrack, history: [] };
-  
+
     // temp local ID
     const tempId = `temp-${Date.now()}`;
     const created = { ...payload, _id: tempId };
     setWorkouts((prev) => [...prev, created]);
     setWorkoutName("");
-  
+
     try {
       const res = await axios.post(`${API_BASE}/workouts`, payload);
       const saved = res.data;
@@ -228,8 +228,8 @@ export default function App() {
       console.error("Failed to save workout:", err);
     }
   };
-  
-  
+
+
 
   const startCounting = () => {
     if (workouts.length > 0) navigateTo(3);
@@ -258,7 +258,7 @@ export default function App() {
     updateWorkoutsAt(index, (w) => {
       const current = parseFloat(w.reps) || 0;  // <- convert to number
       w.reps = current + 1;
-  
+
       if (w.reps > (parseFloat(w.highestReps) || 0)) {
         w.highestReps = w.reps;
         setMessage(`🎉 New personal best for ${w.label}: ${w.reps} reps!`);
@@ -270,13 +270,13 @@ export default function App() {
     });
     if (updated) syncWorkout(updated);
   };
-  
+
   const incrementWeight = (index) => {
     let updated;
     updateWorkoutsAt(index, (w) => {
       const current = parseFloat(w.weight) || 0;  // <- convert to number
       w.weight = current + 1;
-  
+
       if (w.weight > (parseFloat(w.highestWeight) || 0)) {
         w.highestWeight = w.weight;
         setMessage(`🎉 New personal best for ${w.label}: ${w.weight} lbs!`);
@@ -288,7 +288,7 @@ export default function App() {
     });
     if (updated) syncWorkout(updated);
   };
-  
+
 
   // ---------- bodyweight pills (tap +1, long-press -1) ----------
   const bump = (v, delta) => Math.max(0, toInt(v) + delta);
@@ -303,7 +303,7 @@ export default function App() {
   const editField = (index, field, value) => {
     updateWorkoutsAt(index, (w) => {
       let val = value;
-  
+
       if (field === "reps" || field === "weight") {
         // Allow empty string, lone ".", or numeric string
         if (value === "" || /^\.?\d*$/.test(value)) {
@@ -312,19 +312,19 @@ export default function App() {
       } else if (field === "plankDuration") {
         val = normalizeTime(value);
       }
-  
+
       return { ...w, [field]: val };
     });
   };
-  
-  
-  
+
+
+
 
 
   // ---------- end workout (save to history, reset counters) ----------
   const endWorkout = async () => {
     const now = new Date();
-  
+
     // 1️⃣ Build updated workouts array
     const updatedWorkouts = workouts.map((w) => {
       // check if any session fields were updated
@@ -340,27 +340,27 @@ export default function App() {
         w.plankDuration ||
         w.stretches ||
         w.stretchDuration;
-  
+
       if (!hasChanges) return w; // skip snapshot if nothing changed
-  
+
       const snapshot = { label: w.label, timeStamp: now };
-  
+
       if (w.reps > 0) snapshot.reps = w.reps;
       if (w.weight > 0) snapshot.weight = w.weight;
       if (w.pushups > 0) snapshot.pushups = toInt(w.pushups);
       if (w.pullups > 0) snapshot.pullups = toInt(w.pullups);
       if (w.chinups > 0) snapshot.chinups = toInt(w.chinups);
-  
+
       if (w.enduranceType) snapshot.enduranceType = w.enduranceType;
       if (w.distance) snapshot.distance = w.distance;
       if (w.time) snapshot.time = w.time;
-  
+
       if (w.plankType) snapshot.plankType = w.plankType;
       if (w.plankDuration) snapshot.plankDuration = w.plankDuration;
-  
+
       if (w.stretches) snapshot.stretches = w.stretches;
       if (w.stretchDuration) snapshot.stretchDuration = w.stretchDuration;
-  
+
       // reset numeric session counters
       const reset = {
         reps: 0,
@@ -369,15 +369,15 @@ export default function App() {
         pullups: 0,
         chinups: 0,
       };
-  
+
       return { ...w, history: [...(w.history || []), snapshot], ...reset };
     });
-  
+
     // 2️⃣ Update state
     setWorkouts(updatedWorkouts);
     setMessage("");
     navigateTo(2);
-  
+
     // 3️⃣ Sync only workouts that were updated AND have valid backend IDs
     const workoutsToSync = updatedWorkouts.filter(
       (w) =>
@@ -385,7 +385,7 @@ export default function App() {
         !w._id.startsWith("temp-") &&
         w.history[w.history.length - 1]?.timeStamp === now
     );
-  
+
     try {
       await Promise.all(
         workoutsToSync.map((w) =>
@@ -397,10 +397,10 @@ export default function App() {
     } catch (err) {
       console.error("Unexpected error while saving workouts:", err);
     }
-  }; 
+  };
 
 
-  
+
 
   // ---------- history view helpers ----------
   const openHistory = (label) => {
@@ -419,7 +419,7 @@ export default function App() {
         </TouchableOpacity>
       ) : null,
     [page]
-  ); 
+  );
 
   const removeWorkout = (index) => {
     const workoutToRemove = workouts[index];
@@ -427,7 +427,7 @@ export default function App() {
 
     // Optional: remove from backend
     if (workoutToRemove._id && !workoutToRemove._id.startsWith("temp-")) {
-      axios.delete(`${API_BASE}/workouts/${workoutToRemove._id}`).catch(() => {});
+      axios.delete(`${API_BASE}/workouts/${workoutToRemove._id}`).catch(() => { });
     }
   };
 
@@ -456,95 +456,95 @@ export default function App() {
           </TouchableOpacity>
         </>
       )}
-{page === 2 && (
-  <View style={{ flex: 1, width: "100%" }}>
-    {/* Top section */}
-    <View style={{ alignItems: "center", paddingHorizontal: 12 }}>
-      <Text style={styles.title}>Add Your Workouts</Text>
+      {page === 2 && (
+        <View style={{ flex: 1, width: "100%" }}>
+          {/* Top section */}
+          <View style={{ alignItems: "center", paddingHorizontal: 12 }}>
+            <Text style={styles.title}>Add Your Workouts</Text>
 
-      <View style={styles.addRow}>
-        <TextInput
-          placeholder="Workout name"
-          value={workoutName}
-          onChangeText={setWorkoutName}
-          placeholderTextColor="#cfcfcf"
-          style={[styles.input, styles.addRowInput]}
-          returnKeyType="done"
-        />
-        <TouchableOpacity
-          onPress={addWorkout}
-          disabled={!workoutName.trim()}
-          style={[styles.addBtn, !workoutName.trim() && styles.disabledBtn]}
-        >
-          <Text style={styles.addBtnText}>Add</Text>
-        </TouchableOpacity>
-      </View>
+            <View style={styles.addRow}>
+              <TextInput
+                placeholder="Workout name"
+                value={workoutName}
+                onChangeText={setWorkoutName}
+                placeholderTextColor="#cfcfcf"
+                style={[styles.input, styles.addRowInput]}
+                returnKeyType="done"
+              />
+              <TouchableOpacity
+                onPress={addWorkout}
+                disabled={!workoutName.trim()}
+                style={[styles.addBtn, !workoutName.trim() && styles.disabledBtn]}
+              >
+                <Text style={styles.addBtnText}>Add</Text>
+              </TouchableOpacity>
+            </View>
 
-      <View style={styles.colorRow}>
-        <Text style={styles.colorRowLabel}>Snowflake Color:</Text>
-        <View style={styles.pickerWrapper}>
-          <Picker
-            selectedValue={flakeColor}
-            onValueChange={(v) => setFlakeColor(v)}
-            dropdownIconColor="#fff"
-            style={styles.picker}
-            itemStyle={{ height: 40 }}
-          >
-            <Picker.Item label="White" value="white" />
-            <Picker.Item label="Red" value="red" />
-            <Picker.Item label="Blue" value="blue" />
-            <Picker.Item label="Purple" value="purple" />
-            <Picker.Item label="Pink" value="pink" />
-            <Picker.Item label="Rainbow" value="rainbow" />
-          </Picker>
-        </View>
-      </View>
-    </View>
-
-    {/* Scrollable workout list */}
-    <View style={{ flex: 1 }}>
-      <FlatList
-        data={workouts}
-        keyExtractor={(item, index) => item?._id ?? `${item?.label}-${index}`}
-        contentContainerStyle={{ paddingHorizontal: 12, paddingTop: 20, paddingBottom: 14 }}
-        renderItem={({ item, index }) => (
-          <View style={styles.workoutItemRow}>
-            <TouchableOpacity onPress={() => openHistory(item.label)} style={{ flex: 1 }}>
-              <Text style={styles.workoutLink}>{item.label}</Text>
-            </TouchableOpacity>
-            <TouchableOpacity onPress={() => removeWorkout(index)} style={styles.removeBtn}>
-              <Text style={styles.removeBtnText}>Remove</Text>
-            </TouchableOpacity>
+            <View style={styles.colorRow}>
+              <Text style={styles.colorRowLabel}>Snowflake Color:</Text>
+              <View style={styles.pickerWrapper}>
+                <Picker
+                  selectedValue={flakeColor}
+                  onValueChange={(v) => setFlakeColor(v)}
+                  dropdownIconColor="#fff"
+                  style={styles.picker}
+                  itemStyle={{ height: 40 }}
+                >
+                  <Picker.Item label="White" value="white" />
+                  <Picker.Item label="Red" value="red" />
+                  <Picker.Item label="Blue" value="blue" />
+                  <Picker.Item label="Purple" value="purple" />
+                  <Picker.Item label="Pink" value="pink" />
+                  <Picker.Item label="Rainbow" value="rainbow" />
+                </Picker>
+              </View>
+            </View>
           </View>
-        )}
-        ListEmptyComponent={
-          <Text style={{ color: "#bbb", textAlign: "center", marginTop: 20 }}>
-            Add a workout above to get started.
-          </Text>
-        }
-      />
-    </View>
 
-    {/* Fixed button at bottom */}
-    <TouchableOpacity
-      onPress={startCounting}
-      disabled={workouts.length === 0}
-      style={[
-        styles.primaryBtn,
-        workouts.length === 0 && styles.disabledBtn,
-        { margin: 12, alignSelf: "center" },
-      ]}
-    >
-      <Text style={styles.primaryBtnText}>Begin Workout</Text>
-    </TouchableOpacity>
-  </View>
-)}
+          {/* Scrollable workout list */}
+          <View style={{ flex: 1 }}>
+            <FlatList
+              data={workouts}
+              keyExtractor={(item, index) => item?._id ?? `${item?.label}-${index}`}
+              contentContainerStyle={{ paddingHorizontal: 12, paddingTop: 20, paddingBottom: 14 }}
+              renderItem={({ item, index }) => (
+                <View style={styles.workoutItemRow}>
+                  <TouchableOpacity onPress={() => openHistory(item.label)} style={{ flex: 1 }}>
+                    <Text style={styles.workoutLink}>{item.label}</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity onPress={() => removeWorkout(index)} style={styles.removeBtn}>
+                    <Text style={styles.removeBtnText}>Remove</Text>
+                  </TouchableOpacity>
+                </View>
+              )}
+              ListEmptyComponent={
+                <Text style={{ color: "#bbb", textAlign: "center", marginTop: 20 }}>
+                  Add a workout above to get started.
+                </Text>
+              }
+            />
+          </View>
+
+          {/* Fixed button at bottom */}
+          <TouchableOpacity
+            onPress={startCounting}
+            disabled={workouts.length === 0}
+            style={[
+              styles.primaryBtn,
+              workouts.length === 0 && styles.disabledBtn,
+              { margin: 12, alignSelf: "center" },
+            ]}
+          >
+            <Text style={styles.primaryBtnText}>Begin Workout</Text>
+          </TouchableOpacity>
+        </View>
+      )}
 
 
-      
 
-      
- 
+
+
+
       {page === 3 && (
         <>
           <Text style={styles.title}>Workout Tracker</Text>
@@ -564,36 +564,35 @@ export default function App() {
 
                 {/* Top counters row */}
                 {/* Top counters row */}
-<View style={styles.counterRow}>
-  <View style={styles.counterCol}>
-    <Text style={styles.counterLabel}>Reps</Text>
-    <TextInput
-  style={styles.counterValueInput}
-  keyboardType={Platform.OS === "android" ? "decimal-pad" : "numbers-and-punctuation"}
-  value={fmt(item.reps)}
-  onChangeText={(v) => editField(index, "reps", v)}
-/>
+                <View style={styles.counterRow}>
+                  <View style={styles.counterCol}>
+                    <Text style={styles.counterLabel}>Reps</Text>
+                    <TextInput
+                      style={styles.counterValueInput}
+                      keyboardType={Platform.OS === "android" ? "decimal-pad" : "numbers-and-punctuation"}
+                      value={fmt(item.reps)}
+                      onChangeText={(v) => editField(index, "reps", v)}
+                    />
 
-    <TouchableOpacity style={styles.counterBtn} onPress={() => incrementReps(index)}>
-      <Text style={styles.counterBtnText}>+1 rep</Text>
-    </TouchableOpacity>
-  </View>
+                    <TouchableOpacity style={styles.counterBtn} onPress={() => incrementReps(index)}>
+                      <Text style={styles.counterBtnText}>+1 rep</Text>
+                    </TouchableOpacity>
+                  </View>
 
-  <View style={styles.counterCol}>
-    <Text style={styles.counterLabel}>Weight</Text>
-    <TextInput
-  style={styles.counterValueInput}
-  keyboardType={Platform.OS === "android" ? "decimal-pad" : "numbers-and-punctuation"}
-  value={fmt(item.weight)}
-  onChangeText={(v) => editField(index, "weight", v)}
-/>
+                  <View style={styles.counterCol}>
+                    <Text style={styles.counterLabel}>Weight</Text>
+                    <TextInput
+                      style={styles.counterValueInput}
+                      keyboardType={Platform.OS === "android" ? "decimal-pad" : "numbers-and-punctuation"}
+                      value={fmt(item.weight)}
+                      onChangeText={(v) => editField(index, "weight", v)}
+                    />
 
-    <TouchableOpacity style={styles.counterBtn} onPress={() => incrementWeight(index)}>
-      <Text style={styles.counterBtnText}>+1 lb</Text>
-    </TouchableOpacity>
-  </View>
-</View>
-
+                    <TouchableOpacity style={styles.counterBtn} onPress={() => incrementWeight(index)}>
+                      <Text style={styles.counterBtnText}>+1 lb</Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
 
                 <View style={styles.hr} />
 
@@ -613,14 +612,14 @@ export default function App() {
                       returnKeyType="done"
                     />
                     <TextInput
-  placeholder="Time (HH:MM:SS or MM:SS)"
-  placeholderTextColor="#cfcfcf"
-  value={fmt(item.time)}
-  onChangeText={(v) => editField(index, "time", v)}
-  style={styles.input}
-  returnKeyType="done"
-  keyboardType={Platform.OS === "android" ? "default" : "numbers-and-punctuation"}
-/>
+                      placeholder="Time (HH:MM:SS or MM:SS)"
+                      placeholderTextColor="#cfcfcf"
+                      value={fmt(item.time)}
+                      onChangeText={(v) => editField(index, "time", v)}
+                      style={styles.input}
+                      returnKeyType="done"
+                      keyboardType={Platform.OS === "android" ? "default" : "numbers-and-punctuation"}
+                    />
 
 
                   </View>
@@ -726,11 +725,11 @@ export default function App() {
                 </View>
               </View>
             )}
-          /> 
+          />
           <TouchableOpacity style={styles.backButton} onPress={goBack}>
-  <Icon name="arrow-back" size={20} color="white" />
-  <Text style={[styles.backText, { marginLeft: 6 }]}>Back</Text>
-</TouchableOpacity>
+            <Icon name="arrow-back" size={20} color="white" />
+            <Text style={[styles.backText, { marginLeft: 6 }]}>Back</Text>
+          </TouchableOpacity>
 
           <TouchableOpacity onPress={endWorkout} style={[styles.primaryBtn, styles.endBtn]}>
             <Text style={styles.primaryBtnText}>End Set</Text>
@@ -738,65 +737,65 @@ export default function App() {
         </>
       )}
 
-{page === 4 && selectedWorkout && (
-  <View style={{ flex: 1, position: "relative", width: "100%", alignItems: "center", paddingHorizontal: 14 }}>
-    <Text style={styles.title}>History for {selectedWorkout}</Text>
+      {page === 4 && selectedWorkout && (
+        <View style={{ flex: 1, position: "relative", width: "100%", alignItems: "center", paddingHorizontal: 14 }}>
+          <Text style={styles.title}>History for {selectedWorkout}</Text>
 
-    <FlatList
-      data={workouts.find((w) => w.label === selectedWorkout)?.history || []}
-      keyExtractor={(_, i) => `${selectedWorkout}-h-${i}`}
-      style={{ width: "100%" }}
-      contentContainerStyle={{ paddingBottom: 120, paddingHorizontal: 6 }}
-      renderItem={({ item, index }) => {
-        const workoutIndex = workouts.findIndex((w) => w.label === selectedWorkout);
-        return (
-          <View style={[styles.historyItem, { flexDirection: "row", justifyContent: "space-between", alignItems: "center" }]}>
-            <View style={{ flex: 1 }}>
-              <Text style={styles.historyLine}>
-                <Text style={styles.bold}>Reps:</Text> {item.reps}  •  <Text style={styles.bold}>Weight:</Text> {item.weight} lbs
-              </Text>
-              <Text style={styles.historyLine}>
-                <Text style={styles.bold}>PB Reps:</Text> {item.highestReps}  •  <Text style={styles.bold}>PB Wt:</Text> {item.highestWeight}
-              </Text>
-              <Text style={styles.historyLine}>
-                <Text style={styles.bold}>Endurance:</Text> {item.enduranceType || "-"} {item.distance ? `${item.distance} mi` : ""}{item.time ? ` in ${item.time}` : ""}
-              </Text>
-              <Text style={styles.historyLine}>
-                <Text style={styles.bold}>Pushups:</Text> {toInt(item.pushups)}  •  <Text style={styles.bold}>Pullups:</Text> {toInt(item.pullups)}  •  <Text style={styles.bold}>Chinups:</Text> {toInt(item.chinups)}
-              </Text>
-              <Text style={styles.historyLine}>
-                <Text style={styles.bold}>Plank/Combat:</Text> {item.plankType || "-"} {item.plankDuration ? `for ${item.plankDuration}` : ""}
-              </Text>
-              <Text style={styles.historyLine}>
-                <Text style={styles.bold}>Stretches:</Text> {item.stretches || "-"} {item.stretchDuration ? `for ${item.stretchDuration} min` : ""}
-              </Text>
-              <Text style={styles.historyTime}>{formatDate(item.timeStamp)}</Text>
-            </View>
+          <FlatList
+            data={workouts.find((w) => w.label === selectedWorkout)?.history || []}
+            keyExtractor={(_, i) => `${selectedWorkout}-h-${i}`}
+            style={{ width: "100%" }}
+            contentContainerStyle={{ paddingBottom: 120, paddingHorizontal: 6 }}
+            renderItem={({ item, index }) => {
+              const workoutIndex = workouts.findIndex((w) => w.label === selectedWorkout);
+              return (
+                <View style={[styles.historyItem, { flexDirection: "row", justifyContent: "space-between", alignItems: "center" }]}>
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.historyLine}>
+                      <Text style={styles.bold}>Reps:</Text> {item.reps}  •  <Text style={styles.bold}>Weight:</Text> {item.weight} lbs
+                    </Text>
+                    <Text style={styles.historyLine}>
+                      <Text style={styles.bold}>PB Reps:</Text> {item.highestReps}  •  <Text style={styles.bold}>PB Wt:</Text> {item.highestWeight}
+                    </Text>
+                    <Text style={styles.historyLine}>
+                      <Text style={styles.bold}>Endurance:</Text> {item.enduranceType || "-"} {item.distance ? `${item.distance} mi` : ""}{item.time ? ` in ${item.time}` : ""}
+                    </Text>
+                    <Text style={styles.historyLine}>
+                      <Text style={styles.bold}>Pushups:</Text> {toInt(item.pushups)}  •  <Text style={styles.bold}>Pullups:</Text> {toInt(item.pullups)}  •  <Text style={styles.bold}>Chinups:</Text> {toInt(item.chinups)}
+                    </Text>
+                    <Text style={styles.historyLine}>
+                      <Text style={styles.bold}>Plank/Combat:</Text> {item.plankType || "-"} {item.plankDuration ? `for ${item.plankDuration}` : ""}
+                    </Text>
+                    <Text style={styles.historyLine}>
+                      <Text style={styles.bold}>Stretches:</Text> {item.stretches || "-"} {item.stretchDuration ? `for ${item.stretchDuration} min` : ""}
+                    </Text>
+                    <Text style={styles.historyTime}>{formatDate(item.timeStamp)}</Text>
+                  </View>
 
-            <TouchableOpacity
-  onPress={() => deleteHistory(workouts[workoutIndex]._id, index)}
-  style={{ padding: 6 }}
->
-  <Text style={{ color: "red", fontWeight: "bold" }}>Delete</Text>
-</TouchableOpacity>
-          </View>
-        );
-      }}
-      ListEmptyComponent={<Text style={{ color: "#ccc" }}>No history yet.</Text>}
-    />
+                  <TouchableOpacity
+                    onPress={() => deleteHistory(workouts[workoutIndex]._id, index)}
+                    style={{ padding: 6 }}
+                  >
+                    <Text style={{ color: "red", fontWeight: "bold" }}>Delete</Text>
+                  </TouchableOpacity>
+                </View>
+              );
+            }}
+            ListEmptyComponent={<Text style={{ color: "#ccc" }}>No history yet.</Text>}
+          />
 
-    <TouchableOpacity style={styles.backButton} onPress={goBack}>
-      <Icon name="arrow-back" size={18} color="white" />
-      <Text style={[styles.backText, { marginLeft: 6 }]}>Back</Text>
-    </TouchableOpacity>
-  </View>
-)}
+          <TouchableOpacity style={styles.backButton} onPress={goBack}>
+            <Icon name="arrow-back" size={18} color="white" />
+            <Text style={[styles.backText, { marginLeft: 6 }]}>Back</Text>
+          </TouchableOpacity>
+        </View>
+      )}
 
 
-      
+
     </View>
   );
-}  
+}
 
 
 
@@ -917,20 +916,20 @@ const styles = StyleSheet.create({
   },
   pickerWrapper: {
     flex: 1,
-  borderWidth: 1,
-  borderColor: '#fff',
-  borderRadius: 12,
-  backgroundColor: '#',
-  justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: '#fff',
+    borderRadius: 12,
+    backgroundColor: '#',
+    justifyContent: 'center',
   },
   picker: {
     height: 40,          // aligns the text properly
-  color: '#fff',       // text color
-  width: '100%',       // fill the wrapper
-  margin: 0,           // remove extra margin
-  padding: 0,   
-  }, 
-  
+    color: '#fff',       // text color
+    width: '100%',       // fill the wrapper
+    margin: 0,           // remove extra margin
+    padding: 0,
+  },
+
 
   // list items
   workoutItem: {
@@ -1052,7 +1051,7 @@ const styles = StyleSheet.create({
   endBtn: {
     backgroundColor: "#e55353",
     marginTop: 14,
-  }, 
+  },
   removeBtn: {
     backgroundColor: "#aa2222",
     paddingHorizontal: 12,
@@ -1087,7 +1086,7 @@ const styles = StyleSheet.create({
     color: "#cfcfcf",
     fontSize: 13,
     marginTop: 4,
-  },  
+  },
   counterValueInput: {
     fontSize: 20,        // big enough to read
     color: "white",      // visible text
@@ -1100,7 +1099,7 @@ const styles = StyleSheet.create({
     borderRadius: 6,
     backgroundColor: "#222", // optional, contrast with text
     minWidth: 60,       // prevent shrinking too small
-  }, 
+  },
 });
 
 
