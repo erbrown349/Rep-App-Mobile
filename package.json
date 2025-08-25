@@ -1,0 +1,26 @@
+{
+  "name": "rep_mobile_app",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "start": "expo start",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "@react-native-picker/picker": "2.11.1",
+    "axios": "^1.11.0",
+    "cors": "^2.8.5",
+    "dotenv": "^17.2.1",
+    "expo": "^53.0.20",
+    "express": "^5.1.0",
+    "mongoose": "^8.17.1",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "react-native": "^0.79.5",
+    "react-native-svg": "^15.11.2"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": ""
+}
